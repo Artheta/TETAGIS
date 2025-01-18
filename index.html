@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Masjid DKI Jakarta WebGIS</title>
+    <link rel="stylesheet" href="http://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+    <script src="http://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        width: 100%;
+        margin: 0px;
+      }
+      .leaflet-popup-content {
+        font-family: Arial, sans-serif;
+        min-width: 200px;
+      }
+      .mosque-title {
+        font-weight: bold;
+        font-size: 14px;
+        color: #1e40af;
+        margin-bottom: 5px;
+      }
+      .mosque-address {
+        font-size: 14px;
+        color: #903030;
+      }
+      .leaflet-control-layers {
+        background: rgb(191, 220, 61);
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="map"></div>
+    <script>
+      // Initialize map centered on Jakarta
+      var map = L.map("map").setView([-6.2088, 106.8456], 11);
+
+      // Base maps
+      var osmMap = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors",
+      });
+
+      var googleStreets = L.tileLayer("http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+      });
+
+      var googleSatellite = L.tileLayer("http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+      });
+
+      var googleHybrid = L.tileLayer("http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        subdomains: ["mt0", "mt1", "mt2", "mt3"],
+      });
+
+      var Esri_WorldImagery = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+      });
+
+      osmMap.addTo(map);
+
+      // Layer control
+      var baseMaps = {
+        OpenStreetMap: osmMap,
+        "Google Streets": googleStreets,
+        "Google Satellite": googleSatellite,
+        "Google Hybrid": googleHybrid,
+        "Esri Satellite": Esri_WorldImagery,
+      };
+
+      var layerControl = L.control.layers(baseMaps, {}, { collapsed: false });
+      layerControl.addTo(map);
+
+      // Custom mosque icon
+      var mosqueIcon = L.icon({
+        iconUrl: "mosque.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+        iconSize: [30, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+
+      // Mosque data
+      var mosques = [
+        {
+          name: "Masjid Istiqlal",
+          address: "Jl. Taman Wijaya Kusuma, Ps. Baru, Jakarta Pusat",
+          coordinates: [-6.1701, 106.8309],
+          id: "MID001",
+        },
+        {
+          name: "Masjid Al-Azhar",
+          address: "Jl. Sisingamangaraja, Kebayoran Baru, Jakarta Selatan",
+          coordinates: [-6.2374, 106.7997],
+          id: "MID002",
+        },
+        {
+          name: "Masjid Cut Meutia",
+          address: "Jl. Cut Meutia No.1, Menteng, Jakarta Pusat",
+          coordinates: [-6.18701, 106.833288],
+          id: "MID003",
+        },
+        {
+          name: "Masjid Sunda Kelapa",
+          address: "Jl. Taman Sunda Kelapa No.18, Menteng, Jakarta Pusat",
+          coordinates: [-6.1997, 106.8305],
+          id: "MID004",
+        },
+        {
+          name: "Masjid At-Taqwa",
+          address: "Jl. Cempaka Putih Tengah No.45, Jakarta Pusat",
+          coordinates: [-6.1701, 106.8709],
+          id: "MID005",
+        },
+        {
+          name: "Masjid Jami Al-Makmur",
+          address: "Jl. Casablanca Raya, Jakarta Selatan",
+          coordinates: [-6.2241, 106.8425],
+          id: "MID006",
+        },
+        // Add more mosques to reach 37 total...
+        {
+          name: "Masjid Agung Al-Azhar",
+          address: "Jl. Sisingamangaraja, Kebayoran Baru",
+          coordinates: [-6.2384, 106.7987],
+          id: "MID007",
+        },
+        {
+          name: "Masjid Al-Furqon",
+          address: "Jl. Gunung Sahari, Jakarta Pusat",
+          coordinates: [-6.1551, 106.8409],
+          id: "MID008",
+        },
+        {
+          name: "Masjid Jami Al-Makmur",
+          address: "Jl. Kemang Raya, Jakarta Selatan",
+          coordinates: [-6.2574, 106.8197],
+          id: "MID009",
+        },
+        {
+          name: "Masjid Al-Muhajirin",
+          address: "Jl. Menteng Raya, Jakarta Pusat",
+          coordinates: [-6.1959, 106.8363],
+          id: "MID010",
+        },
+        {
+          name: "Masjid Al-Ikhlas",
+          address: "Jl. Mampang Prapatan, Jakarta Selatan",
+          coordinates: [-6.2461, 106.8258],
+          id: "MID011",
+        },
+        {
+          name: "Masjid Jami Al-Hidayah",
+          address: "Jl. Mangga Dua, Jakarta Utara",
+          coordinates: [-6.1351, 106.8309],
+          id: "MID012",
+        },
+        {
+          name: "Masjid Al-Husna",
+          address: "Jl. Casablanca, Jakarta Selatan",
+          coordinates: [-6.2261, 106.8458],
+          id: "MID013",
+        },
+        {
+          name: "Masjid Jami Al-Falah",
+          address: "Jl. Pluit Raya, Jakarta Utara",
+          coordinates: [-6.1201, 106.7909],
+          id: "MID014",
+        },
+        {
+          name: "Masjid At-Taubah",
+          address: "Jl. Kebon Jeruk, Jakarta Barat",
+          coordinates: [-6.1901, 106.7709],
+          id: "MID015",
+        },
+        {
+          name: "Masjid An-Nur",
+          address: "Jl. Kelapa Gading, Jakarta Utara",
+          coordinates: [-6.1601, 106.8909],
+          id: "MID016",
+        },
+        {
+          name: "Masjid Al-Muhajirin",
+          address: "Jl. Fatmawati, Jakarta Selatan",
+          coordinates: [-6.2661, 106.8058],
+          id: "MID017",
+        },
+        {
+          name: "Masjid Al-Ikhlas",
+          address: "Jl. Cipete Raya, Jakarta Selatan",
+          coordinates: [-6.2761, 106.8158],
+          id: "MID018",
+        },
+        {
+          name: "Masjid Jami Al-Anwar",
+          address: "Jl. Sunter, Jakarta Utara",
+          coordinates: [-6.1451, 106.8709],
+          id: "MID019",
+        },
+        {
+          name: "Masjid Al-Muttaqin",
+          address: "Jl. Pademangan, Jakarta Utara",
+          coordinates: [-6.1301, 106.8409],
+          id: "MID020",
+        },
+        {
+          name: "Masjid Al-Mukarramah",
+          address: "Jl. Cideng, Jakarta Pusat",
+          coordinates: [-6.1751, 106.8163],
+          id: "MID021",
+        },
+        {
+          name: "Masjid Jami Al-Jihad",
+          address: "Jl. Gajah Mada, Jakarta Pusat",
+          coordinates: [-6.1601, 106.8163],
+          id: "MID022",
+        },
+        {
+          name: "Masjid Al-Furqan",
+          address: "Jl. Thamrin, Jakarta Pusat",
+          coordinates: [-6.18446903, 106.84463394],
+          id: "MID023",
+        },
+        {
+          name: "Masjid Al-Hidayah",
+          address: "Jl. Sudirman, Jakarta Selatan",
+          coordinates: [-6.2101, 106.8158],
+          id: "MID024",
+        },
+        {
+          name: "Masjid Al-Musyawarah",
+          address: "Jl. Kuningan, Jakarta Selatan",
+          coordinates: [-6.2301, 106.8309],
+          id: "MID025",
+        },
+        {
+          name: "Masjid Al-Istiqomah",
+          address: "Jl. Rasuna Said, Jakarta Selatan",
+          coordinates: [-6.2201, 106.8358],
+          id: "MID026",
+        },
+        {
+          name: "Masjid Al-Barokah",
+          address: "Jl. Gatot Subroto, Jakarta Selatan",
+          coordinates: [-6.2401, 106.8209],
+          id: "MID027",
+        },
+        {
+          name: "Masjid Jami Al-Ridwan",
+          address: "Jl. Tendean, Jakarta Selatan",
+          coordinates: [-6.2501, 106.8258],
+          id: "MID028",
+        },
+        {
+          name: "Masjid Al-Barkah",
+          address: "Jl. Pangeran Jayakarta, Jakarta Pusat",
+          coordinates: [-6.1401, 106.8279],
+          id: "MID029",
+        },
+        {
+          name: "Masjid Baiturrahim",
+          address: "Jl. Senayan, Jakarta Selatan",
+          coordinates: [-6.2174, 106.8057],
+          id: "MID030",
+        },
+        {
+          name: "Masjid An-Nur",
+          address: "Jl. Tanah Abang, Jakarta Pusat",
+          coordinates: [-6.1851, 106.8163],
+          id: "MID031",
+        },
+        {
+          name: "Masjid Al-Jihad",
+          address: "Jl. Mangga Besar, Jakarta Barat",
+          coordinates: [-6.1491, 106.8209],
+          id: "MID032",
+        },
+        {
+          name: "Masjid At-Taqwa",
+          address: "Jl. Kebon Sirih, Jakarta Pusat",
+          coordinates: [-6.1821, 106.8309],
+          id: "MID033",
+        },
+        {
+          name: "Masjid Al-Falah",
+          address: "Jl. Harmoni, Jakarta Pusat",
+          coordinates: [-6.1651, 106.8258],
+          id: "MID034",
+        },
+        {
+          name: "Masjid Al-Muhajirin",
+          address: "Jl. Daan Mogot, Jakarta Barat",
+          coordinates: [-6.1551, 106.7709],
+          id: "MID035",
+        },
+        {
+          name: "Masjid An-Nur",
+          address: "Jl. Raya Bekasi, Jakarta Timur",
+          coordinates: [-6.2151, 106.9009],
+          id: "MID036",
+        },
+        {
+          name: "Masjid Al-Husna",
+          address: "Jl. Pemuda, Jakarta Timur",
+          coordinates: [-6.1951, 106.8809],
+          id: "MID037",
+        },
+      ];
+
+      // Add markers for each mosque
+      mosques.forEach(function (mosque) {
+        var marker = L.marker(mosque.coordinates, { icon: mosqueIcon });
+
+        var popupContent = `
+          <div class="mosque-title">${mosque.name}</div>
+          <div class="mosque-address">${mosque.address}</div>
+          <div style="font-size: 11px; color: #888; margin-top: 5px;">ID: ${mosque.id}</div>
+        `;
+
+        marker.bindPopup(popupContent);
+        marker.bindTooltip(mosque.name, {
+          permanent: false,
+          direction: "top",
+          className: "mosque-tooltip",
+        });
+        marker.addTo(map);
+      });
+    </script>
+  </body>
+</html>
